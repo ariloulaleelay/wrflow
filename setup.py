@@ -11,7 +11,7 @@ setup(
     packages=find_packages(exclude=['tests/*']),
     include_package_data=True,
     zip_safe=False,
-    scripts=['wrflow/bin/wrflow'],
+#    scripts=['scripts/bin/wrflow'],
     install_requires=[
         'cherrypy',
         'sqlalchemy',
