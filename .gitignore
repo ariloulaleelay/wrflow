@@ -2,6 +2,12 @@
 __pycache__/
 *.py[cod]
 
+# ropeproject
+.ropeproject
+
+# Vim swap files
+*.swp
+
 # C extensions
 *.so
 

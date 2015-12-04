@@ -15,7 +15,6 @@ __all__ = [
 class WrflowConfigException(Exception):
     pass
 
-
 class ConfigEntry(object):
 
     def __init__(self, config, key):
