@@ -1,6 +1,9 @@
 import logging
 
-from wrflow.common import hash_dict
+# from wrflow.common import hash_dict
+# from wrflow.model import TaskInstance
+from wrflow.model import Event
+from wrflow import Task
 
 logger = logging.getLogger(__name__)
 
@@ -9,27 +12,15 @@ __all__ = [
 ]
 
 
-class TaskQueueEntry(object):
-
-    def __init__(self, task_class, task_params, priority, required_events, produced_events):
-        self.task_class = task_class
-        self.task_params = task_params
-        self.priority = priority
-        self.required_events = required_events
-        self.produced_events = produced_events
-        self.id = task_class.__name__ + '-' + hash_dict(task_params)
-
-
 class Scheduler(object):
 
     def __init__(self):
         self._known_task_classes = {}
         self._events = {}
-        self._required_events = {}
-        self._required_events_queue = []
+        self._tasks = {}
         self._tasks_ready_to_run = {}
         self._tasks_running = {}
-        self._tasks_waiting_for_events = {}
+        self._tasks_waiting = {}
 
     def _get_task_by_class_name(self, classname):
         if classname not in self._known_task_classes:
@@ -41,21 +32,49 @@ class Scheduler(object):
             self._known_tasks[classname] = class_instance
         return self._known_task_classes[classname]
 
-    def add_task(self, classname, params, priority=1):
-        task_class = self._get_task_by_class_name(classname)
-        self._add_task_queue.append([task_class, params, priority])
-        required_events = task_class.required_events(params)
-        if required_events is None:
-            raise TypeError("task could not be scheduled with such params")
-        produced_events = task_class.produced_events(params)
-        queue_entry = TaskQueueEntry(task_class, params, priority, required_events, produced_events)
-        if new_task_only and queue_entry.id in self._tasks_waiting_for_events:
-            return
-        self._tasks_waiting_for_events[queue_entry.id] = queue_entry
+    def find_events(self, params):
+        """Find events by params mask
+        """
+        result = []
+        for event in self._events.itervalues():
+            if event.is_applicable(params):
+                result.append(event)
+        return result
 
-    def update_ready_to_run(self):
-        for task_key, task in self._tasks_waiting_for_events.iteritems():
-            required_events =
+    def is_params_happened(self, params):
+        for event in self._events.itervalues():
+            if event.is_applicable(params):
+                return True
+        return False
+
+    def require_event(self, params, demand=1):
+        event = Event(params, demand)
+
+        if event.id in self._events:
+            event = self._events[event.id]
+            if demand > event.demand:
+                event.demand = demand
+                event.save()
+            return
+
+        self._events[event.id] = event
+        event.save()
+
+    def _get_event_ancestors(self, event, seen_events=None):
+        found = False
+        for class_name, class_obj in self._known_task_classes.iteritems():
+            required_events = class_obj.required_events(event.params)
+            if required_events is None:
+                continue
+            for event_conjunction in required_events:
+                for single_event_params in event_conjunction:
+                    if self.is_params_happened:
+                        continue
+                    found = found or self.require_event(single_event_params, demand, seen_events)
+        return found
+
+    def generate_current_dag(self):
+        pass
 
     def schedule_tasks_by_required_events(self):
-
+        pass

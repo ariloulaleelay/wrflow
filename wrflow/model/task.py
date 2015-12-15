@@ -17,16 +17,20 @@ class TaskInstance(Base):
 
     id = Column(String, primary_key=True)
     classname = Column(String, nullable=False)
-    params = Column(String, nullable=False)
     status = Column(String, nullable=False)
+    params_string = Column(String, nullable=False)
+    required_events_string = Column(String, nullable=False)
+    produced_events_string = Column(String, nullable=False)
     priority = Column(Integer, nullable=False, default=0)
 
-    def __init__(self, classname, params, status='queue', priority=0):
+    def __init__(self, classname, params, required_events, produced_events, status='queue', priority=0):
         self.classname = classname
-        self.params = json_dumps(params)
-        self.parsed_params = params
         self.status = status
         self.priority = priority
+        self.params = params
+        self.required_events = required_events
+        self.produced_events = produced_events
+
         hash = sha1()
         hash.update(classname)
         hash.update('\0')
@@ -35,13 +39,17 @@ class TaskInstance(Base):
             hash.update('\0')
             hash.update(params[k])
             hash.update('\0')
+        self.id = hash.hexdigest()
+
+        self.__init_construct()
 
     @orm.reconsructor
     def __init_reconstruct(self):
-        self.parsed_params = json_loads(self.params)
+        self.params = json_loads(self.params_string)
+        self.required_events = json_loads(self.required_events_string)
+        self.produced_events = json_loads(self.produced_events_string)
 
-    @property
-    def parsed_params(self):
-        if self.__parsed_params is None:
-            self.__parsed_params = json_loads(self.params)
-        return self.__parsed_params
+    def __init_construct(self):
+        self.params_string = json_dumps(self.params)
+        self.required_events_string = json_dumps(self.required_events)
+        self.produced_events_string = json_dumps(self.produced_events)
