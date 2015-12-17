@@ -43,7 +43,7 @@ class TaskInstance(Base):
 
         self.__init_construct()
 
-    @orm.reconsructor
+    @orm.reconstructor
     def __init_reconstruct(self):
         self.params = json_loads(self.params_string)
         self.required_events = json_loads(self.required_events_string)

@@ -1,43 +1,8 @@
 import logging
-from wrflow.common import hash_dict
-from wrflow.common import hash_list
-from copy import copy
+from wrflow.model import Edge
+from wrflow.model import Node
 
 logger = logging.getLogger(__name__)
-
-
-class Node(object):
-
-    def __init__(self, params, demand=0, satisfied=False):
-        self.id = hash_dict(params)
-        self.params = params
-        self.demand = demand
-        self.edges = {}
-        self.satisfied = satisfied
-
-    def __eq__(self, that):
-        return self.id == that.id
-
-
-class Edge(object):
-
-    def __init__(self, task_class):
-        self.task_class = task_class
-        self.nodes = {}
-
-    def __eq__(self, that):
-        return self.id == that.id
-
-    @property
-    def id(self):
-        return self.task_class.__name__ + ':' + hash_list(sorted(self.nodes.keys()))
-
-    @property
-    def satisfied(self):
-        for node in self.nodes.values():
-            if not node.satisfied:
-                return False
-        return True
 
 
 class DagException(Exception):
