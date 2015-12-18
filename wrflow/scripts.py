@@ -3,7 +3,8 @@
 
 import argparse
 import logging
-from wrflow import default_config
+import os
+from wrflow.config import default_config
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s\t%(levelname)s\t%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger('root')
@@ -15,7 +16,7 @@ def initdb(args, config):
 
 def main():
     parser = argparse.ArgumentParser(description='Wrflow control script')
-    parser.add_argument('--config')
+    parser.add_argument('--config', default=os.environ['WRFLOW_CONFIG'])
 
     subparsers = parser.add_subparsers(help='subcommands')
     parser_command = subparsers.add_parser("initdb")
